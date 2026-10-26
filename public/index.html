@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karatasi</title>
+<style>
+:root{--bg:#faf7f2;--ink:#14213d;--mute:#4a5568;--line:#ddd6c8;--teal:#0f766e;--tealbg:#e3f1ef;--warn:#8a5a00;--warnbg:#fbf0d9;--bad:#9b2c2c;--card:#fffdf9}
+@media (prefers-color-scheme:dark){:root{--bg:#10192b;--ink:#eef0f4;--mute:#aab3c3;--line:#2c3a55;--teal:#5fd0c4;--tealbg:#14352f;--warn:#f0c674;--warnbg:#3a2f12;--bad:#f19a9a;--card:#16223a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:700;margin:0}
+h1{font-size:2.2rem;letter-spacing:.01em}h2{font-size:1.25rem;margin:32px 0 10px}
+.tag{color:var(--mute);margin:2px 0 14px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;font-size:.85rem;margin-bottom:18px}
+.pill{border:1px solid var(--line);border-radius:99px;padding:2px 12px;background:var(--card)}
+.ok{border-color:var(--teal);color:var(--teal)}
+.doc-wrap{position:relative}
+textarea{width:100%;min-height:240px;padding:14px;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);resize:vertical;transition:border-color .2s,box-shadow .2s}
+textarea.drag-over{border-color:var(--teal);box-shadow:0 0 0 3px rgba(15,118,110,.2);background:var(--tealbg)}
+.drop-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none;opacity:0;transition:opacity .2s;color:var(--teal);font-size:.95rem;font-weight:600}
+textarea.drag-over~.drop-hint{opacity:1}
+.drop-hint svg{width:36px;height:36px;stroke:var(--teal);fill:none;stroke-width:1.8}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+button,select{font:inherit;padding:8px 16px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+button.primary[disabled]{opacity:.6;cursor:wait}
+button#import-btn{display:inline-flex;align-items:center;gap:6px}
+button#import-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+#import-file{display:none}
+.file-name{font-size:.85rem;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+#import-progress{font-size:.82rem;color:var(--teal);display:none}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.msg{padding:12px 14px;border-radius:6px;margin:12px 0}.msg.err{background:var(--warnbg);color:var(--bad)}.msg.info{background:var(--tealbg)}
+.item{border-left:3px solid var(--line);padding:6px 0 6px 14px;margin:12px 0}
+.item.v{border-color:var(--teal)}.item.u{border-color:var(--warn)}
+.lab{font-weight:600}
+.quote{display:block;color:var(--mute);font-size:.92rem;margin-top:4px;font-style:italic}
+.badge{font-size:.78rem;border-radius:4px;padding:1px 8px;margin-left:6px;font-style:normal}
+.badge.good{background:var(--tealbg);color:var(--teal)}.badge.bad{background:var(--warnbg);color:var(--warn)}.badge.sug{background:var(--line);color:var(--ink)}
+.step{display:flex;gap:10px;align-items:flex-start;margin:10px 0}.step input[type=checkbox]{margin-top:7px;width:18px;height:18px}
+.step input[type=text]{flex:1;font:inherit;padding:6px 8px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--ink)}
+.step input[type=text]:hover,.step input[type=text]:focus{border-color:var(--line)}
+.done input[type=text]{text-decoration:line-through;color:var(--mute)}
+pre{white-space:pre-wrap;background:var(--card);border:1px solid var(--line);padding:12px;border-radius:6px}
+small{color:var(--mute)}
+.simple-list{padding-left:1.4em;margin:8px 0}
+.simple-list li{margin:6px 0;line-height:1.5}
+.simple-list li.action::marker{content:"→ "}
+.simple-list li.warn-item::marker{content:"⚠ ";color:var(--warn)}
+</style>
+<!-- mammoth.js for .docx extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js" defer></script>
+</head><body><main>
+<h1>Karatasi</h1>
+<p class="tag">Understand your documents. Know your next step.</p>
+<div class="bar"><span class="pill" id="model">Model: checking&hellip;</span><span class="pill" id="net">Browser: checking&hellip;</span><span class="pill">Analysis runs through QVAC on this computer</span></div>
+
+<label for="doc"><b>Paste or import your document</b></label>
+<div class="doc-wrap">
+  <textarea id="doc" placeholder="Paste text here &mdash; or drag &amp; drop a file, or click &ldquo;Import file&rdquo; below.&#10;&#10;Supported: .txt  .md  .pdf  .docx"></textarea>
+  <div class="drop-hint">
+    <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><rect x="3" y="16" width="18" height="5" rx="1"/></svg>
+    Drop file to import
+  </div>
+</div>
+
+<div class="row">
+  <button class="primary" id="go">Explain this document</button>
+  <button id="import-btn" type="button" title="Import a file from your device (.txt, .md, .pdf, .docx)">
+    <svg viewBox="0 0 24 24"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Import file
+  </button>
+  <input type="file" id="import-file" accept=".txt,.md,.pdf,.docx,text/plain,text/markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+  <select id="sample" aria-label="Sample documents"><option value="">Load a sample&hellip;</option></select>
+  <button id="clear">Clear text</button>
+  <span class="file-name" id="file-name"></span>
+  <span id="import-progress">Extracting&hellip;</span>
+  <small id="count">0 characters</small>
+</div>
+
+<div id="status"></div><div id="out"></div>
+<p><small>Karatasi gives plain-language help, not legal or financial advice. A small local model can make mistakes: check important details against the original. Privacy depends on the security of this computer.</small></p>
+<p><button id="wipe">Clear saved checklist</button></p>
+<script src="/samples.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!=null)e.textContent=text;if(cls)e.className=cls;return e};
+const KEY="karatasi.checklist";let maxChars=30000;
+for(const k of Object.keys(window.SAMPLES))$("sample").add(new Option(k,k));
+$("sample").onchange=e=>{if(e.target.value){$("doc").value=window.SAMPLES[e.target.value];count()}};
+function count(){$("count").textContent=`${$("doc").value.length} / ${maxChars} characters`}
+$("doc").oninput=count;
+$("clear").onclick=()=>{$("doc").value="";$("out").replaceChildren();$("file-name").textContent="";count()};
+function net(){const p=$("net");p.textContent="Browser reports: "+(navigator.onLine?"online":"offline")}
+addEventListener("online",net);addEventListener("offline",net);net();
+async function poll(){try{const s=await (await fetch("/api/status")).json();if(s.maxChars)maxChars=s.maxChars;count();
+ const t={ready:"Model: ready","not loaded":"Model: loads on first analysis",loading:`Model: loading ${s.progress}%`,error:"Model: error"}[s.state];
+ $("model").textContent=t;$("model").className="pill"+(s.state==="ready"?" ok":"")}catch{$("model").textContent="Model: local server not reachable"}}
+poll();setInterval(poll,3000);
+const msg=(t,c)=>{$("status").replaceChildren(el("div",t,"msg "+c))};
+function section(t,icon){const h=el("h2",null);h.innerHTML=(icon?icon+" ":"")+t;$("out").append(h)}
+
+function bulletList(items,cls){
+ const ul=document.createElement("ul");ul.className="simple-list";
+ items.forEach(txt=>{const li=el("li",txt,cls||null);ul.append(li)});
+ return ul;
+}
+
+function render(d,text){const out=$("out");out.replaceChildren();
+ if(!d.structured){
+  out.append(el("div","The model could not produce a structured result. Showing raw text.","msg err"),el("pre",d.rawText||""));
+  return;
+ }
+ const r=d.result;
+
+ // 1. Plain-language paraphrase
+ section("What this document says","\uD83D\uDCCB");
+ out.append(el("p",r.paraphrase||"No explanation produced."));
+
+ // 2. Key points
+ if(r.keyPoints&&r.keyPoints.length){
+  section("Key points","\u2705");
+  out.append(bulletList(r.keyPoints));
+ }
+
+ // 3. What you need to do
+ if(r.whatToDo&&r.whatToDo.length){
+  section("What you should do","\uD83D\uDCCC");
+  out.append(bulletList(r.whatToDo,"action"));
+ }
+
+ // 4. Watch out
+ if(r.watchOut&&r.watchOut.length){
+  section("Things to double-check","\u26A0\uFE0F");
+  out.append(bulletList(r.watchOut,"warn-item"));
+ }
+
+ // 5. Dates & amounts (regex, not AI)
+ if(d.detected&&d.detected.length){
+  section("Dates and amounts spotted","\uD83D\uDCC5");
+  out.append(el("small","These were found automatically, not by the AI."));
+  const dl=document.createElement("ul");dl.className="simple-list";
+  d.detected.forEach(x=>{
+   dl.append(el("li",(x.kind==="date"?"\uD83D\uDCC6 Date: ":"\uD83D\uDCB0 Amount: ")+x.value+(x.sourceQuote?" \u2014 "+x.sourceQuote:"")));
+  });
+  out.append(dl);
+ }
+
+ // 6. Original text (collapsible)
+ const det=document.createElement("details");det.append(el("summary","Show original text"),el("pre",text));out.append(det);
+ out.append(el("small",`Generated locally in ${(d.ms/1000).toFixed(1)} s. Always check important details in the original document.`));
+}
+
+/* ── File import ── */
+async function extractText(file){
+  const name=file.name.toLowerCase();
+  const ext=name.slice(name.lastIndexOf('.'));
+
+  // Plain text / markdown
+  if(ext==='.txt'||ext==='.md'||file.type.startsWith('text/')){
+    return await file.text();
+  }
+
+  // PDF via PDF.js (ESM from CDN)
+  if(ext==='.pdf'||file.type==='application/pdf'){
+    const pdfjsLib=await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let text='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      text+=content.items.map(it=>it.str).join(' ')+'\n\n';
+    }
+    return text.trim();
+  }
+
+  // DOCX via mammoth.js
+  if(ext==='.docx'||file.type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document'){
+    if(typeof mammoth==='undefined') throw new Error('mammoth.js not loaded yet — please try again in a moment.');
+    const buf=await file.arrayBuffer();
+    const result=await mammoth.extractRawText({arrayBuffer:buf});
+    return result.value.trim();
+  }
+
+  throw new Error(`Unsupported file type: ${ext}. Supported types: .txt, .md, .pdf, .docx`);
+}
+
+async function handleFile(file){
+  if(!file)return;
+  $("import-progress").style.display='inline';
+  $("file-name").textContent='';
+  try{
+    const text=await extractText(file);
+    $("doc").value=text;
+    $("file-name").textContent=file.name;
+    $("out").replaceChildren();
+    $("status").replaceChildren();
+    count();
+  }catch(e){
+    msg('Could not read file: '+e.message,'err');
+  }finally{
+    $("import-progress").style.display='none';
+  }
+}
+
+$("import-btn").onclick=()=>$("import-file").click();
+$("import-file").onchange=e=>handleFile(e.target.files[0]);
+
+// Drag and drop onto the textarea
+const ta=$("doc");
+ta.addEventListener('dragover',e=>{e.preventDefault();ta.classList.add('drag-over')});
+ta.addEventListener('dragleave',()=>ta.classList.remove('drag-over'));
+ta.addEventListener('drop',e=>{
+  e.preventDefault();ta.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(file)handleFile(file);
+});
+
+/* ── Analyze ── */
+$("go").onclick=async()=>{const text=$("doc").value;
+ if(!text.trim())return msg("Paste a document or load a sample first.","err");
+ if(text.length>maxChars)return msg(`Too long: the limit is ${maxChars} characters. Paste the most important part.`,"err");
+ $("go").disabled=true;$("out").replaceChildren();msg("Working on this computer. The first run loads the model and can take a few minutes.","info");
+ try{const res=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});const d=await res.json();
+  if(!res.ok){msg(d.error||"Something went wrong. Try again.","err");}else{$("status").replaceChildren();render(d,text)}}
+ catch{msg("Could not reach the local Karatasi server. Is it running in PowerShell?","err")}
+ finally{$("go").disabled=false;poll()}};
+$("wipe").onclick=()=>{try{localStorage.removeItem(KEY)}catch{};msg("Saved checklist cleared from this browser.","info")};
+</script></main></body></html>
