@@ -1,6 +1,6 @@
 # Karatasi: Understand your documents. Know your next step.
 
-Offline-first document interpreter. Paste an internship offer, scholarship notice or training announcement and get a plain-English explanation, dates and amounts, what is unclear, questions to ask, and an editable checklist. AI runs locally through QVAC (`@qvac/sdk` 0.22.0, model `LLAMA_3_2_1B_INST_Q4_0`). No cloud AI, no CDN, no analytics.
+Offline-first document interpreter. Paste an internship offer, scholarship notice or training announcement etc, and get a plain-English explanation, dates and amounts, what is unclear, questions to ask, and an editable checklist. AI runs locally through QVAC (`@qvac/sdk` 0.22.0, model `LLAMA_3_2_1B_INST_Q4_0`). No cloud AI, no CDN, no analytics.
 
 ## Run it (Windows, PowerShell)
 1. Extract this zip into `C:\Users\ZBOOK\qvac-test`. Your existing `quickstart.js`, `package.json` and `node_modules` stay as they are.
