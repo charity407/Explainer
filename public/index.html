@@ -78,7 +78,23 @@ small{color:var(--mute)}
   <small id="count">0 characters</small>
 </div>
 
-<div id="status"></div><div id="out"></div>
+<div id="status"></div>
+
+<section class="question-box">
+  <h2>Ask Your Lecture Notes</h2>
+  <p>Have a question? Ask the AI to explain it using your notes.</p>
+
+  <textarea
+    id="question"
+    rows="3"
+    placeholder="e.g. Explain subnetting in simple terms..."
+  ></textarea>
+
+  <button class="primary" id="ask">Ask Question</button>
+  <div id="answer"></div>
+</section>
+
+<div id="out"></div>
 <p><small>Karatasi gives plain-language help, not legal or financial advice. A small local model can make mistakes: check important details against the original. Privacy depends on the security of this computer.</small></p>
 <p><button id="wipe">Clear saved checklist</button></p>
 <script src="/samples.js"></script>
@@ -227,5 +243,58 @@ $("go").onclick=async()=>{const text=$("doc").value;
   if(!res.ok){msg(d.error||"Something went wrong. Try again.","err");}else{$("status").replaceChildren();render(d,text)}}
  catch{msg("Could not reach the local Karatasi server. Is it running in PowerShell?","err")}
  finally{$("go").disabled=false;poll()}};
+ 
+$("ask").onclick=async()=>{
+  const text=$("doc").value;
+  const question=$("question").value.trim();
+
+  if(!text.trim())
+    return msg("Load your lecture notes first.","err");
+
+  if(!question)
+    return msg("Enter a question first.","err");
+
+  if(text.length>maxChars)
+    return msg(`Your notes exceed the ${maxChars}-character limit.`,"err");
+
+  $("ask").disabled=true;
+  $("answer").replaceChildren();
+  msg("Thinking about your question on this computer...","info");
+
+  try{
+    const res=await fetch("/api/ask",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text,question})
+    });
+
+    const d=await res.json();
+
+    if(!res.ok){
+      msg(d.error||"Could not answer your question.","err");
+    }else{
+      $("status").replaceChildren();
+
+      const heading=document.createElement("h3");
+      heading.textContent="Your Question";
+      const q=document.createElement("p");
+      q.textContent=question;
+
+      const answerHeading=document.createElement("h3");
+      answerHeading.textContent="Answer";
+      const answer=document.createElement("p");
+      answer.textContent=d.answer||"No answer was returned.";
+      answer.style.whiteSpace="pre-wrap";
+
+      $("answer").append(heading,q,answerHeading,answer);
+    }
+  }catch{
+    msg("Could not reach Karatasi. Check that the server is running.","err");
+  }finally{
+    $("ask").disabled=false;
+    poll();
+  }
+};
+
 $("wipe").onclick=()=>{try{localStorage.removeItem(KEY)}catch{};msg("Saved checklist cleared from this browser.","info")};
 </script></main></body></html>
