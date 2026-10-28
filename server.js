@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = "127.0.0.1"; // localhost only
 const PUB = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
 const allowed = new Set([`http://127.0.0.1:${PORT}`, `http://localhost:${PORT}`]);
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript" };
 
 let sdk, modelId, loading = null, busy = false, state = "not loaded", progress = 0, lastError = "";
 
