@@ -111,7 +111,7 @@ const server = http.createServer(async (req, res) => {
       try { text = JSON.parse(await readBody(req)).text; } catch { return send(res, 400, { error: "That request was too large or not valid." }); }
       if (typeof text !== "string" || !text.trim()) return send(res, 400, { error: "Paste or load a document first." });
       if (text.length > MAX_CHARS) return send(res, 400, { error: `This document is too long (limit ${MAX_CHARS} characters). Paste the most important part.` });
-      if (busy) return send(res, 429, { error: "Karatasi is still working on another analysis." });
+      if (busy) return send(res, 429, { error: "Explainer is still working on another analysis." });
       busy = true;
       const t0 = Date.now();
       try {
@@ -202,4 +202,4 @@ async function shutdown() {
 }
 process.on("SIGINT", shutdown); process.on("SIGTERM", shutdown);
 
-server.listen(PORT, HOST, () => console.log(`Karatasi is running. Open http://localhost:${PORT} in your browser.`));
+server.listen(PORT, HOST, () => console.log(`Explainer is running. Open http://localhost:${PORT} in your browser.`));

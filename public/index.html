@@ -75,18 +75,22 @@ input:focus-visible {
 }
 
 .brand-mark {
-  display: grid;
-  place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 14px;
-  background: var(--green);
-  color: white;
-  font: inherit;
-  font-size: 23px;
-  font-weight: 750;
-  line-height: 1.1;
+  flex: 0 0 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: transparent;
   box-shadow: 0 5px 13px rgba(41,75,61,.14);
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
 }
 
 .brand-name {
@@ -831,7 +835,9 @@ summary {
 <main class="app-shell">
   <header class="topbar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">E</div>
+      <div class="brand-mark">
+  <img src="/explainer-logo.jpeg" alt="Explainer logo">
+</div>
       <div>
         <div class="brand-name">Explainer</div>
         <div class="brand-note">Clear explanations. Useful next steps.</div>
@@ -991,7 +997,7 @@ const el = (tag, text, cls) => {
   return e;
 };
 
-const KEY = "karatasi.checklist";
+const KEY = "explainer.checklist";
 let maxChars = 30000;
 
 for (const k of Object.keys(window.SAMPLES)) {
